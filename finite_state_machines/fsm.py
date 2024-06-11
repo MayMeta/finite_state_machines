@@ -44,7 +44,7 @@ class BaseFSM:
         elif on_missing_transitions != 'ignore':
             raise ValueError(
                 "Expected on_missing_transitions to be either 'raise', 'go_to_error_state', or 'ignore', "
-                f"instead got: {on_missing_transitions!r}"
+                f'instead got: {on_missing_transitions!r}'
             )
 
     def _validate_transition_mapping(self) -> None:
@@ -335,13 +335,13 @@ class MooreFSM(BaseFSM):
 
 
 def streak_detector(
-        alphabet: Collection[str],
-        n_streak: int = 3,
-        initial_state: str = 'Q0',
-        below_streak_output_template: str | None = None,
-        streak_output_template: str | None = '{input_value} streak detected!',
-        above_streak_output_template: str | None = None,
-    ) -> MooreFSM:
+    alphabet: Collection[str],
+    n_streak: int = 3,
+    initial_state: str = 'Q0',
+    below_streak_output_template: str | None = None,
+    streak_output_template: str | None = '{input_value} streak detected!',
+    above_streak_output_template: str | None = None,
+) -> MooreFSM:
     """This helper function creates a simple MooreFSM to detect streaks (sequences of repeats) in the input stream.
 
     After reading some `input_value` for the first time the streak detector FSM will go to '{input_value}1' state;
@@ -389,6 +389,10 @@ def streak_detector(
             if above_streak_output_template and i > n_streak:
                 outputs[state] = above_streak_output_template.format(input_value=input_value)
     res = MooreFSM(
-        alphabet=alphabet, states=states, initial_state=initial_state, transition_mapping=transitions, outputs=outputs,
+        alphabet=alphabet,
+        states=states,
+        initial_state=initial_state,
+        transition_mapping=transitions,
+        outputs=outputs,
     )
     return res
