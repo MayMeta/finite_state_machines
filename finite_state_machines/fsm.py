@@ -91,6 +91,7 @@ class FSM:
         if some_transitions_were_added and error_state not in self._unique_states:
             self._states.append(error_state)
             self._unique_states.add(error_state)
+            self._transition_mapping[error_state] = full_err_transitions
 
     @property
     def alphabet(self) -> list[str]:
