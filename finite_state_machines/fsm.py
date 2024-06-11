@@ -1,5 +1,5 @@
 import json
-from collections.abc import Collection, Generator, Iterable, Mapping
+from collections.abc import Generator, Iterable, Mapping
 from os import PathLike
 
 from typing_extensions import Self  # replace typing_extensions with typing after upgrading python to 3.11
@@ -13,8 +13,8 @@ class BaseFSM:
 
     def __init__(
         self,
-        alphabet: Collection[str],
-        states: Collection[str],
+        alphabet: Iterable[str],
+        states: Iterable[str],
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
         on_missing_transitions: str = 'raise',
@@ -189,11 +189,11 @@ class AcceptorFSM(BaseFSM):
 
     def __init__(
         self,
-        alphabet: Collection[str],
-        states: Collection[str],
+        alphabet: Iterable[str],
+        states: Iterable[str],
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
-        accepting_states: Collection[str],
+        accepting_states: Iterable[str],
         on_missing_transitions: str = 'raise',
         error_state: str | None = None,
         current_state: str | None = None,
@@ -268,8 +268,8 @@ class MooreFSM(BaseFSM):
 
     def __init__(
         self,
-        alphabet: Collection[str],
-        states: Collection[str],
+        alphabet: Iterable[str],
+        states: Iterable[str],
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
         outputs: Mapping[str, str],
@@ -335,7 +335,7 @@ class MooreFSM(BaseFSM):
 
 
 def streak_detector(
-    alphabet: Collection[str],
+    alphabet: Iterable[str],
     n_streak: int = 3,
     initial_state: str = 'Q0',
     below_streak_output_template: str | None = None,
