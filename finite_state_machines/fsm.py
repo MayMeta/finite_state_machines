@@ -112,12 +112,12 @@ class BaseFSM:
     def transition(self, input_value: str) -> None:
         if input_value not in self._unique_alphabet:
             raise ValueError(
-                f'Expected input_value to be a part of the alphabet {self._alphabet}, instead got: {input_value!r}'
+                f'Expected input_value to be a part of the alphabet {self._alphabet!r}, instead got: {input_value!r}'
             )
         current_state_transitions = self._transition_mapping.get(self._current_state, {})
         if input_value not in current_state_transitions:
             raise ValueError(
-                f'A transition for input {input_value!r} from {self._current_state} is not defined, '
+                f'A transition for input {input_value!r} from {self._current_state!r} is not defined, '
                 'consider setting ensure_transition_completeness to True'
             )
         self._current_state = current_state_transitions[input_value]
