@@ -1,3 +1,5 @@
+![README_Header.jpg](README_Header.jpg)
+
 # Finite-State Machines
 
 This framework provides a pure-Python implementation of
