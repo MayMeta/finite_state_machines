@@ -18,7 +18,8 @@ class FSM:
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
         outputs: Mapping[str, str],
-        ensure_transition_completeness: bool = True,
+        on_missing_transitions: str = 'raise',
+        error_state: str | None = None,
         current_state: str | None = None,
     ):
         self._alphabet = list(alphabet)
@@ -35,11 +36,18 @@ class FSM:
             raise ValueError(f'Expected current_state to be None or one of {states!r}, instead got: {current_state!r}')
         self._initial_state = initial_state
         self._current_state = initial_state if current_state is None else current_state
-        self._transition_mapping = transition_mapping
+        self._transition_mapping = {state: transitions for state, transitions in transition_mapping.items()}
         self._outputs = outputs
         self._validate_transition_mapping()
-        if ensure_transition_completeness:
+        if on_missing_transitions == 'raise':
             self._validate_transitions_completeness()
+        elif on_missing_transitions == 'go_to_error_state':
+            self._add_error_state_for_missing_transitions(error_state=error_state)
+        elif on_missing_transitions != 'ignore':
+            raise ValueError(
+                "Expected on_missing_transitions to be either 'raise', 'go_to_error_state', or 'ignore', "
+                f"instead got: {on_missing_transitions!r}"
+            )
 
     def _validate_transition_mapping(self) -> None:
         for state, state_transitions in self._transition_mapping.items():
@@ -69,6 +77,20 @@ class FSM:
                     f'Expected state {state!r} to have transitions for all possible inputs, '
                     f'instead could not find {inputs_without_transitions!r} in state_transitions'
                 )
+
+    def _add_error_state_for_missing_transitions(self, error_state: str | None = None) -> None:
+        if error_state is None:
+            error_state = 'ERR'
+        full_err_transitions = {inp: error_state for inp in self._alphabet}
+        some_transitions_were_added = False
+        for state in self._states:
+            state_transitions = self._transition_mapping.get(state, {})
+            if len(state_transitions) < len(self._alphabet):
+                self._transition_mapping[state] = full_err_transitions | state_transitions
+                some_transitions_were_added = True
+        if some_transitions_were_added and error_state not in self._unique_states:
+            self._states.append(error_state)
+            self._unique_states.add(error_state)
 
     @property
     def alphabet(self) -> list[str]:
@@ -129,7 +151,7 @@ class FSM:
                 for state, transitions in self._transition_mapping.items()
             },
             outputs={state: output for state, output in self._outputs.items()},
-            ensure_transition_completeness=False,
+            on_missing_transitions='ignore',
             current_state=self._current_state,
         )
 

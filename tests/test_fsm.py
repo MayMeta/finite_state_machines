@@ -102,7 +102,7 @@ class TestFSM(unittest.TestCase):
                 initial_state='Q0',
                 transition_mapping={},
                 outputs={},
-                ensure_transition_completeness=True,
+                on_missing_transitions='raise',
             )
 
     def test_transition_mapping_missing_some_states(self):
@@ -113,7 +113,7 @@ class TestFSM(unittest.TestCase):
                 initial_state='Q0',
                 transition_mapping={'Q0': {'S': 'S1'}},
                 outputs={},
-                ensure_transition_completeness=True,
+                on_missing_transitions='raise',
             )
 
     def test_transition_mapping_missing_some_inputs(self):
@@ -127,7 +127,7 @@ class TestFSM(unittest.TestCase):
                     'S1': {'S': 'S1'},
                 },
                 outputs={},
-                ensure_transition_completeness=True,
+                on_missing_transitions='raise',
             )
 
     def test_to_dict(self):
