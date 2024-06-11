@@ -1,13 +1,13 @@
 import os.path
 import unittest
 
-from finite_state_machines import FSM
+from finite_state_machines import MooreFSM
 
 
-class TestFSM(unittest.TestCase):
+class TestMooreFSM(unittest.TestCase):
     def setUp(self):
         self.json_file_path = 'tmp_test_fsm.json'
-        self.fsm = FSM(
+        self.fsm = MooreFSM(
             alphabet='SL',
             states=['Q0', 'S1', 'S2', 'S3', 'S4', 'L1', 'L2', 'L3', 'L4'],
             initial_state='Q0',
@@ -68,22 +68,24 @@ class TestFSM(unittest.TestCase):
 
     def test_empty_alphabet(self):
         with self.assertRaises(ValueError):
-            FSM(alphabet='', states=['Q0'], initial_state='Q0', transition_mapping={'Q0': {'S': 'S1'}}, outputs={})
+            MooreFSM(alphabet='', states=['Q0'], initial_state='Q0', transition_mapping={'Q0': {'S': 'S1'}}, outputs={})
 
     def test_non_unique_alphabet(self):
         with self.assertRaises(ValueError):
-            FSM(alphabet='SS', states=['Q0'], initial_state='Q0', transition_mapping={'Q0': {'S': 'S1'}}, outputs={})
+            MooreFSM(
+                alphabet='SS', states=['Q0'], initial_state='Q0', transition_mapping={'Q0': {'S': 'S1'}}, outputs={}
+            )
 
     def test_empty_states(self):
         with self.assertRaises(ValueError):
-            FSM(alphabet='S', states=[], initial_state='Q0', transition_mapping={'Q0': {'S': 'S1'}}, outputs={})
+            MooreFSM(alphabet='S', states=[], initial_state='Q0', transition_mapping={'Q0': {'S': 'S1'}}, outputs={})
 
     def test_non_unique_states(self):
         with self.assertRaises(ValueError):
-            FSM(alphabet='S', states='QQQQ', initial_state='Q', transition_mapping={'Q': {'S': 'S1'}}, outputs={})
+            MooreFSM(alphabet='S', states='QQQQ', initial_state='Q', transition_mapping={'Q': {'S': 'S1'}}, outputs={})
 
     def test_on_missing_transitions_go_to_error_state(self):
-        small_fsm = FSM(
+        small_fsm = MooreFSM(
             alphabet='A',
             states=['Q0', 'Q1'],
             initial_state='Q0',
@@ -101,7 +103,7 @@ class TestFSM(unittest.TestCase):
         self.assertEqual(small_fsm.current_state, 'ERR')
 
     def test_on_missing_transitions_ignore(self):
-        small_fsm = FSM(
+        small_fsm = MooreFSM(
             alphabet='A',
             states=['Q0', 'Q1'],
             initial_state='Q0',
@@ -118,7 +120,7 @@ class TestFSM(unittest.TestCase):
         self.fsm.transition('S')
         self.assertEqual(self.fsm.current_state, 'S1')
         fsm_copy = self.fsm.copy()
-        self.assertIsInstance(fsm_copy, FSM)
+        self.assertIsInstance(fsm_copy, MooreFSM)
         self.assertIsNot(fsm_copy, self.fsm)
         self.assertEqual(fsm_copy.transition_mapping, self.fsm.transition_mapping)
         self.assertIsNot(fsm_copy.transition_mapping, self.fsm.transition_mapping)
@@ -128,7 +130,7 @@ class TestFSM(unittest.TestCase):
 
     def test_empty_transition_mapping(self):
         with self.assertRaises(ValueError):
-            FSM(
+            MooreFSM(
                 alphabet='S',
                 states=['Q0', 'S1'],
                 initial_state='Q0',
@@ -139,7 +141,7 @@ class TestFSM(unittest.TestCase):
 
     def test_transition_mapping_missing_some_states(self):
         with self.assertRaises(ValueError):
-            FSM(
+            MooreFSM(
                 alphabet='S',
                 states=['Q0', 'S1'],
                 initial_state='Q0',
@@ -150,7 +152,7 @@ class TestFSM(unittest.TestCase):
 
     def test_transition_mapping_missing_some_inputs(self):
         with self.assertRaises(ValueError):
-            FSM(
+            MooreFSM(
                 alphabet='SL',
                 states=['Q0', 'S1'],
                 initial_state='Q0',
@@ -163,7 +165,7 @@ class TestFSM(unittest.TestCase):
             )
 
     def test_to_dict(self):
-        basic_fsm = FSM(alphabet='A', states='0', initial_state='0', transition_mapping={'0': {'A': '0'}}, outputs={})
+        basic_fsm = MooreFSM(alphabet='A', states='0', initial_state='0', transition_mapping={'0': {'A': '0'}}, outputs={})
         expected_dict = {
             'alphabet': ['A'],
             'states': ['0'],
@@ -177,7 +179,7 @@ class TestFSM(unittest.TestCase):
 
     def test_to_json(self):
         self.assertFalse(os.path.exists(self.json_file_path))
-        basic_fsm = FSM(alphabet='A', states='0', initial_state='0', transition_mapping={'0': {'A': '0'}}, outputs={})
+        basic_fsm = MooreFSM(alphabet='A', states='0', initial_state='0', transition_mapping={'0': {'A': '0'}}, outputs={})
         expected_text = (
             '{"alphabet": ["A"], "states": ["0"], "initial_state": "0", "current_state": "0", '
             + '"transition_mapping": {"0": {"A": "0"}}, "outputs": {}}'
@@ -196,8 +198,8 @@ class TestFSM(unittest.TestCase):
             'transition_mapping': {'0': {'A': '0'}},
             'outputs': {'0': 'V'},
         }
-        got_fsm = FSM.from_dict(fsm_dict)
-        self.assertIsInstance(got_fsm, FSM)
+        got_fsm = MooreFSM.from_dict(fsm_dict)
+        self.assertIsInstance(got_fsm, MooreFSM)
         self.assertEqual(got_fsm.alphabet, ['A'])
         self.assertEqual(got_fsm.states, ['0'])
         self.assertEqual(got_fsm.initial_state, '0')
@@ -213,8 +215,8 @@ class TestFSM(unittest.TestCase):
                 '{"alphabet": ["A"], "states": ["0"], "initial_state": "0", "current_state": "0", '
                 + '"transition_mapping": {"0": {"A": "0"}}, "outputs": {}}'
             )
-        got_fsm = FSM.from_json(self.json_file_path)
-        self.assertIsInstance(got_fsm, FSM)
+        got_fsm = MooreFSM.from_json(self.json_file_path)
+        self.assertIsInstance(got_fsm, MooreFSM)
         self.assertEqual(got_fsm.alphabet, ['A'])
         self.assertEqual(got_fsm.states, ['0'])
         self.assertEqual(got_fsm.initial_state, '0')
@@ -228,7 +230,7 @@ class TestFSM(unittest.TestCase):
         self.assertEqual(self.fsm.current_state, 'S1')
         self.assertFalse(os.path.exists(self.json_file_path))
         self.fsm.to_json(self.json_file_path)
-        restored_fsm = FSM.from_json(self.json_file_path)
+        restored_fsm = MooreFSM.from_json(self.json_file_path)
         self.assertEqual(restored_fsm.current_state, 'S1')
         restored_fsm.transition('S')
         self.assertEqual(restored_fsm.current_state, 'S2')
@@ -236,7 +238,7 @@ class TestFSM(unittest.TestCase):
     def test_repr(self):
         self.fsm.transition('L')
         expected_repr = (
-            "FSM(alphabet=['S', 'L'], states=['Q0', 'S1', 'S2', 'S3', 'S4', 'L1', 'L2', 'L3', 'L4'], "
+            "MooreFSM(alphabet=['S', 'L'], states=['Q0', 'S1', 'S2', 'S3', 'S4', 'L1', 'L2', 'L3', 'L4'], "
             + "initial_state='Q0', current_state='L1', transition_mapping={'Q0': {'S': 'S1', 'L': 'L1'}, "
             + "'S1': {'S': 'S2', 'L': 'L1'}, 'S2': {'S': 'S3', 'L': 'L1'}, 'S3': {'S': 'S4', 'L': 'L1'}, "
             + "'S4': {'S': 'S4', 'L': 'L1'}, 'L1': {'S': 'S1', 'L': 'L2'}, 'L2': {'S': 'S1', 'L': 'L3'}, "

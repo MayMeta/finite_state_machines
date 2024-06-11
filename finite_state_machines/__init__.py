@@ -1,4 +1,4 @@
-from .fsm import FSM
+from .fsm import BaseFSM, AcceptorFSM, MooreFSM
 
 
-__all__ = ['FSM']
+__all__ = ['BaseFSM', 'AcceptorFSM', 'MooreFSM']

@@ -5,10 +5,8 @@ from os import PathLike
 from typing_extensions import Self  # replace typing_extensions with typing after upgrading python to 3.11
 
 
-class FSM:
-    """A Moore Finite-State Machine implementation.
-
-    https://en.wikipedia.org/wiki/Moore_machine
+class BaseFSM:
+    """Base class for all Finite-State Machines.
     """
 
     def __init__(
@@ -17,7 +15,6 @@ class FSM:
         states: Collection[str],
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
-        outputs: Mapping[str, str],
         on_missing_transitions: str = 'raise',
         error_state: str | None = None,
         current_state: str | None = None,
@@ -37,7 +34,6 @@ class FSM:
         self._initial_state = initial_state
         self._current_state = initial_state if current_state is None else current_state
         self._transition_mapping = {state: transitions for state, transitions in transition_mapping.items()}
-        self._outputs = outputs
         self._validate_transition_mapping()
         if on_missing_transitions == 'raise':
             self._validate_transitions_completeness()
@@ -110,18 +106,10 @@ class FSM:
         return self._transition_mapping
 
     @property
-    def outputs(self) -> Mapping[str, str | None]:
-        return self._outputs
-
-    @property
     def current_state(self) -> str:
         return self._current_state
 
-    @property
-    def current_output(self) -> str | None:
-        return self._outputs.get(self._current_state)
-
-    def transition(self, input_value: str) -> str:
+    def transition(self, input_value: str) -> None:
         if input_value not in self._unique_alphabet:
             raise ValueError(
                 f'Expected input_value to be a part of the alphabet {self._alphabet}, instead got: {input_value!r}'
@@ -133,14 +121,186 @@ class FSM:
                 'consider setting ensure_transition_completeness to True'
             )
         self._current_state = current_state_transitions[input_value]
+
+    def run(self, inputs: Iterable[str]) -> None:
+        for input_value in inputs:
+            self.transition(input_value)
+
+    def reset(self) -> None:
+        self._current_state = self._initial_state
+
+    def copy(self) -> Self:
+        return type(self)(
+            alphabet=self._alphabet,
+            states=self._states,
+            initial_state=self._initial_state,
+            transition_mapping={
+                state: {inp: target_state for inp, target_state in transitions.items()}
+                for state, transitions in self._transition_mapping.items()
+            },
+            on_missing_transitions='ignore',
+            current_state=self._current_state,
+        )
+
+    def to_dict(self) -> dict[str, str | list[str] | dict]:
+        return {
+            'alphabet': self._alphabet,
+            'states': self._states,
+            'initial_state': self._initial_state,
+            'current_state': self._current_state,
+            'transition_mapping': self._transition_mapping,
+        }
+
+    def to_json(self, dst: str | PathLike, **kwargs) -> None:
+        dumped_dict = self.to_dict()
+        with open(dst, 'w', encoding='utf8') as f:
+            json.dump(dumped_dict, f, **kwargs)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, str | list[str] | dict]) -> Self:
+        return cls(
+            alphabet=d['alphabet'],
+            states=d['states'],
+            initial_state=d['initial_state'],
+            transition_mapping=d['transition_mapping'],
+            current_state=d['current_state'],
+            on_missing_transitions='ignore',
+        )
+
+    @classmethod
+    def from_json(cls, src: str | PathLike) -> Self:
+        with open(src, 'r', encoding='utf8') as f:
+            d = json.load(f)
+        return cls.from_dict(d)
+
+    def __repr__(self) -> str:
+        d = self.to_dict()
+        arguments = ', '.join(f'{k!s}={v!r}' for k, v in d.items())
+        return f'{self.__class__.__qualname__}({arguments})'
+
+
+class AcceptorFSM(BaseFSM):
+    """Acceptor Finite-State Machine implementation.
+
+    https://en.wikipedia.org/wiki/Finite-state_machine#Acceptors
+    """
+
+    def __init__(
+        self,
+        alphabet: Collection[str],
+        states: Collection[str],
+        initial_state: str,
+        transition_mapping: Mapping[str, Mapping[str, str]],
+        accepting_states: Collection[str],
+        on_missing_transitions: str = 'raise',
+        error_state: str | None = None,
+        current_state: str | None = None,
+    ):
+        super().__init__(
+            alphabet=alphabet,
+            states=states,
+            initial_state=initial_state,
+            transition_mapping=transition_mapping,
+            on_missing_transitions=on_missing_transitions,
+            error_state=error_state,
+            current_state=current_state,
+        )
+        self._accepting_states = list(accepting_states)
+        self._unique_accepting_states = set(self._accepting_states)
+        if len(self._accepting_states) > len(self._unique_accepting_states):
+            raise ValueError(
+                f'Expected accepting_states to contain unique elements, instead got: {accepting_states}'
+            )
+
+    @property
+    def accepting_states(self) -> list[str]:
+        return self._accepting_states
+
+    @property
+    def is_accepting(self) -> bool:
+        return self._current_state in self._unique_accepting_states
+
+    def transition(self, input_value: str) -> bool:
+        super().transition(input_value)
+        return self.is_accepting
+
+    def run(self, inputs: Iterable[str]) -> Generator[bool]:
+        for input_value in inputs:
+            yield self.transition(input_value)
+
+    def copy(self) -> Self:
+        return type(self)(
+            alphabet=self._alphabet,
+            states=self._states,
+            initial_state=self._initial_state,
+            transition_mapping={
+                state: {inp: target_state for inp, target_state in transitions.items()}
+                for state, transitions in self._transition_mapping.items()
+            },
+            accepting_states=self._accepting_states,
+            on_missing_transitions='ignore',
+            current_state=self._current_state,
+        )
+
+    def to_dict(self) -> dict[str, str | list[str] | dict]:
+        return super().to_dict() | {'accepting_states': self._accepting_states}
+
+    @classmethod
+    def from_dict(cls, d: dict[str, str | list[str] | dict]) -> Self:
+        return cls(
+            alphabet=d['alphabet'],
+            states=d['states'],
+            initial_state=d['initial_state'],
+            transition_mapping=d['transition_mapping'],
+            accepting_states=d['accepting_states'],
+            current_state=d['current_state'],
+            on_missing_transitions='ignore',
+        )
+
+
+class MooreFSM(BaseFSM):
+    """A Moore Finite-State Machine implementation.
+
+    https://en.wikipedia.org/wiki/Moore_machine
+    """
+
+    def __init__(
+        self,
+        alphabet: Collection[str],
+        states: Collection[str],
+        initial_state: str,
+        transition_mapping: Mapping[str, Mapping[str, str]],
+        outputs: Mapping[str, str],
+        on_missing_transitions: str = 'raise',
+        error_state: str | None = None,
+        current_state: str | None = None,
+    ):
+        super().__init__(
+            alphabet=alphabet,
+            states=states,
+            initial_state=initial_state,
+            transition_mapping=transition_mapping,
+            on_missing_transitions=on_missing_transitions,
+            error_state=error_state,
+            current_state=current_state,
+        )
+        self._outputs = outputs
+
+    @property
+    def outputs(self) -> Mapping[str, str | None]:
+        return self._outputs
+
+    @property
+    def current_output(self) -> str | None:
+        return self._outputs.get(self._current_state)
+
+    def transition(self, input_value: str) -> str:
+        super().transition(input_value)
         return self.current_output
 
     def run(self, inputs: Iterable[str]) -> Generator[str]:
         for input_value in inputs:
             yield self.transition(input_value)
-
-    def reset(self) -> None:
-        self._current_state = self._initial_state
 
     def copy(self) -> Self:
         return type(self)(
@@ -157,19 +317,7 @@ class FSM:
         )
 
     def to_dict(self) -> dict[str, str | list[str] | dict]:
-        return {
-            'alphabet': self._alphabet,
-            'states': self._states,
-            'initial_state': self._initial_state,
-            'current_state': self._current_state,
-            'transition_mapping': self._transition_mapping,
-            'outputs': self._outputs,
-        }
-
-    def to_json(self, dst: str | PathLike, **kwargs) -> None:
-        dumped_dict = self.to_dict()
-        with open(dst, 'w', encoding='utf8') as f:
-            json.dump(dumped_dict, f, **kwargs)
+        return super().to_dict() | {'outputs': self._outputs}
 
     @classmethod
     def from_dict(cls, d: dict[str, str | list[str] | dict]) -> Self:
@@ -180,15 +328,5 @@ class FSM:
             transition_mapping=d['transition_mapping'],
             outputs=d['outputs'],
             current_state=d['current_state'],
+            on_missing_transitions='ignore',
         )
-
-    @classmethod
-    def from_json(cls, src: str | PathLike) -> Self:
-        with open(src, 'r', encoding='utf8') as f:
-            d = json.load(f)
-        return cls.from_dict(d)
-
-    def __repr__(self) -> str:
-        d = self.to_dict()
-        arguments = ', '.join(f'{k!s}={v!r}' for k, v in d.items())
-        return f'{self.__class__.__qualname__}({arguments})'
