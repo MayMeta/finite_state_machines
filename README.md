@@ -25,8 +25,8 @@ Poetry.
 1. **Clone the repository:**
 
     ```sh
-    git clone git@github.com:MayMeta/ebay_assignment_dev.git
-    cd ebay_assignment_dev
+    git clone git@github.com:MayMeta/finite_state_machines.git
+    cd finite_state_machines
     ```
 
 2. **Install Poetry (if not already installed):**
@@ -56,7 +56,7 @@ To build the package, follow these steps:
 1. **Ensure you are in the root directory of the repository:**
 
     ```sh
-    cd ebay_assignment_dev
+    cd finite_state_machines
     ```
 
 2. **Build the package:**
@@ -74,7 +74,7 @@ To install the built package in a different virtual environment, follow these st
 1. **Navigate to the directory where the built package files are located:**
 
     ```sh
-    cd ebay_assignment_dev/dist
+    cd finite_state_machines/dist
     ```
 
 2. **Create a new virtual environment:**
