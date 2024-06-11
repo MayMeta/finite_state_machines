@@ -1,4 +1,6 @@
+import json
 from collections.abc import Collection, Generator, Iterable, Mapping
+from os import PathLike
 
 from typing_extensions import Self  # replace typing_extensions with typing after upgrading python to 3.11
 
@@ -140,6 +142,28 @@ class FSM:
             'transition_mapping': self._transition_mapping,
             'outputs': self._outputs,
         }
+
+    def to_json(self, dst: str | PathLike, **kwargs) -> None:
+        dumped_dict = self.to_dict()
+        with open(dst, 'w', encoding='utf8') as f:
+            json.dump(dumped_dict, f, **kwargs)
+
+    @classmethod
+    def from_dict(cls, d: dict[str, str | list[str] | dict]) -> Self:
+        return cls(
+            alphabet=d['alphabet'],
+            states=d['states'],
+            initial_state=d['initial_state'],
+            transition_mapping=d['transition_mapping'],
+            outputs=d['outputs'],
+            current_state=d['current_state'],
+        )
+
+    @classmethod
+    def from_json(cls, src: str | PathLike) -> Self:
+        with open(src, 'r', encoding='utf8') as f:
+            d = json.load(f)
+        return cls.from_dict(d)
 
     def __repr__(self) -> str:
         d = self.to_dict()

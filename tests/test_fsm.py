@@ -143,6 +143,64 @@ class TestFSM(unittest.TestCase):
         got_dict = basic_fsm.to_dict()
         self.assertEqual(expected_dict, got_dict)
 
+    def test_to_json(self):
+        self.assertFalse(os.path.exists(self.json_file_path))
+        basic_fsm = FSM(alphabet='A', states='0', initial_state='0', transition_mapping={'0': {'A': '0'}}, outputs={})
+        expected_text = (
+            '{"alphabet": ["A"], "states": ["0"], "initial_state": "0", "current_state": "0", '
+            + '"transition_mapping": {"0": {"A": "0"}}, "outputs": {}}'
+        )
+        basic_fsm.to_json(self.json_file_path)
+        with open(self.json_file_path, 'r', encoding='utf8') as f:
+            got_text = f.read()
+        self.assertEqual(expected_text, got_text)
+
+    def test_from_dict(self):
+        fsm_dict = {
+            'alphabet': ['A'],
+            'states': ['0'],
+            'initial_state': '0',
+            'current_state': '0',
+            'transition_mapping': {'0': {'A': '0'}},
+            'outputs': {'0': 'V'},
+        }
+        got_fsm = FSM.from_dict(fsm_dict)
+        self.assertIsInstance(got_fsm, FSM)
+        self.assertEqual(got_fsm.alphabet, ['A'])
+        self.assertEqual(got_fsm.states, ['0'])
+        self.assertEqual(got_fsm.initial_state, '0')
+        self.assertEqual(got_fsm.current_state, '0')
+        self.assertEqual(got_fsm.transition_mapping, {'0': {'A': '0'}})
+        self.assertEqual(got_fsm.outputs, {'0': 'V'})
+        self.assertEqual(got_fsm.current_output, 'V')
+
+    def test_from_json(self):
+        self.assertFalse(os.path.exists(self.json_file_path))
+        with open(self.json_file_path, 'w', encoding='utf8') as f:
+            f.write(
+                '{"alphabet": ["A"], "states": ["0"], "initial_state": "0", "current_state": "0", '
+                + '"transition_mapping": {"0": {"A": "0"}}, "outputs": {}}'
+            )
+        got_fsm = FSM.from_json(self.json_file_path)
+        self.assertIsInstance(got_fsm, FSM)
+        self.assertEqual(got_fsm.alphabet, ['A'])
+        self.assertEqual(got_fsm.states, ['0'])
+        self.assertEqual(got_fsm.initial_state, '0')
+        self.assertEqual(got_fsm.current_state, '0')
+        self.assertEqual(got_fsm.transition_mapping, {'0': {'A': '0'}})
+        self.assertEqual(got_fsm.outputs, {})
+        self.assertIsNone(got_fsm.current_output)
+
+    def test_to_from_json_doesnt_break_fsm(self):
+        self.fsm.transition('S')
+        self.assertEqual(self.fsm.current_state, 'S1')
+        self.assertFalse(os.path.exists(self.json_file_path))
+        self.fsm.to_json(self.json_file_path)
+        restored_fsm = FSM.from_json(self.json_file_path)
+        self.assertEqual(restored_fsm.current_state, 'S1')
+        restored_fsm.transition('S')
+        self.assertEqual(restored_fsm.current_state, 'S2')
+
     def test_repr(self):
         self.fsm.transition('L')
         expected_repr = (
