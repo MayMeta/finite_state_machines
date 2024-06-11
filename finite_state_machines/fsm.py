@@ -7,6 +7,8 @@ from typing_extensions import Self  # replace typing_extensions with typing afte
 
 class BaseFSM:
     """Base class for all Finite-State Machines.
+
+    https://en.wikipedia.org/wiki/Finite-state_machine
     """
 
     def __init__(
