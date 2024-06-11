@@ -1,0 +1,65 @@
+[tool.poetry]
+name = "finite-state-machines"
+version = "0.1.0"
+description = "A simple pure-python implementation of Finite-State Machines"
+authors = ["May Meta <may42meta@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+typing_extensions = "^4.12"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.2"
+
+[tool.poetry.group.dev.dependencies]
+docformatter = "^1.7.5"
+blue = "^0.9.1"
+pylint = "*"
+autoflake = "*"
+pybetter = "*"
+isort = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pylint]
+    [tool.pylint.master]
+    fail-under = 9
+    good-names-rgxs="^[_a-z][_a-z0-9]?$"
+    extension-pkg-whitelist = ["math", "numpy", "pydantic"]
+    disable = [
+      "raw-checker-failed",
+      "bad-inline-option",
+      "locally-disabled",
+      "file-ignored",
+      "suppressed-message",
+      "useless-suppression",
+      "deprecated-pragma",
+      "use-symbolic-message-instead",
+      "too-few-public-methods",
+      "logging-fstring-interpolation",
+      "logging-format-interpolation",
+      'missing-module-docstring',
+      'missing-class-docstring',
+      'missing-function-docstring',
+  ]
+    [tool.pylint."FORMAT"]
+    max-line-length = 120
+
+[tool.blue]
+line-length = 120
+target-version = ["py310"]
+
+[tool.isort]
+line_length = 120
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
+no_lines_before = ['STDLIB', 'LOCALFOLDER']
+known_third_party = []
+multi_line_output = 3
+lines_after_imports = 2
+
+[tool.docformatter]
+wrap-summaries=120
+wrap-descriptions=120
