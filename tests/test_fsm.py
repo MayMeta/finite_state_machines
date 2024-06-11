@@ -1,31 +1,14 @@
 import os.path
 import unittest
 
-from finite_state_machines import MooreFSM
+from finite_state_machines import MooreFSM, streak_detector
 
 
 class TestMooreFSM(unittest.TestCase):
     def setUp(self):
         self.json_file_path = 'tmp_test_fsm.json'
-        self.fsm = MooreFSM(
-            alphabet='SL',
-            states=['Q0', 'S1', 'S2', 'S3', 'S4', 'L1', 'L2', 'L3', 'L4'],
-            initial_state='Q0',
-            transition_mapping={
-                'Q0': {'S': 'S1', 'L': 'L1'},
-                'S1': {'S': 'S2', 'L': 'L1'},
-                'S2': {'S': 'S3', 'L': 'L1'},
-                'S3': {'S': 'S4', 'L': 'L1'},
-                'S4': {'S': 'S4', 'L': 'L1'},
-                'L1': {'S': 'S1', 'L': 'L2'},
-                'L2': {'S': 'S1', 'L': 'L3'},
-                'L3': {'S': 'S1', 'L': 'L4'},
-                'L4': {'S': 'S1', 'L': 'L4'},
-            },
-            outputs={
-                'S3': 'Error! Too many Strawberry lollipops!',
-                'L3': 'Error! Too many Lemon lollipops!',
-            },
+        self.fsm: MooreFSM = streak_detector(
+            ['S', 'L'], n_streak=3, streak_output_template='Error! Too many {input_value} lollipops!'
         )
 
     def tearDown(self):
@@ -43,7 +26,7 @@ class TestMooreFSM(unittest.TestCase):
         self.assertEqual(self.fsm.current_state, 'S2')
         self.fsm.transition('S')
         self.assertEqual(self.fsm.current_state, 'S3')
-        self.assertEqual(self.fsm.current_output, 'Error! Too many Strawberry lollipops!')
+        self.assertEqual(self.fsm.current_output, 'Error! Too many S lollipops!')
 
     def test_invalid_transition(self):
         with self.assertRaises(ValueError):
@@ -243,7 +226,7 @@ class TestMooreFSM(unittest.TestCase):
             + "'S1': {'S': 'S2', 'L': 'L1'}, 'S2': {'S': 'S3', 'L': 'L1'}, 'S3': {'S': 'S4', 'L': 'L1'}, "
             + "'S4': {'S': 'S4', 'L': 'L1'}, 'L1': {'S': 'S1', 'L': 'L2'}, 'L2': {'S': 'S1', 'L': 'L3'}, "
             + "'L3': {'S': 'S1', 'L': 'L4'}, 'L4': {'S': 'S1', 'L': 'L4'}}, "
-            + "outputs={'S3': 'Error! Too many Strawberry lollipops!', 'L3': 'Error! Too many Lemon lollipops!'})"
+            + "outputs={'S3': 'Error! Too many S lollipops!', 'L3': 'Error! Too many L lollipops!'})"
         )
         got_repr = repr(self.fsm)
         self.assertEqual(expected_repr, got_repr)

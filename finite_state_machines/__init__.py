@@ -1,4 +1,4 @@
-from .fsm import BaseFSM, AcceptorFSM, MooreFSM
+from .fsm import BaseFSM, AcceptorFSM, MooreFSM, streak_detector
 
 
-__all__ = ['BaseFSM', 'AcceptorFSM', 'MooreFSM']
+__all__ = ['BaseFSM', 'AcceptorFSM', 'MooreFSM', 'streak_detector']

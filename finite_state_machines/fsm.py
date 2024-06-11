@@ -330,3 +330,63 @@ class MooreFSM(BaseFSM):
             current_state=d['current_state'],
             on_missing_transitions='ignore',
         )
+
+
+def streak_detector(
+        alphabet: Collection[str],
+        n_streak: int = 3,
+        initial_state: str = 'Q0',
+        below_streak_output_template: str | None = None,
+        streak_output_template: str | None = '{input_value} streak detected!',
+        above_streak_output_template: str | None = None,
+    ) -> MooreFSM:
+    """This helper function creates a simple MooreFSM to detect streaks (sequences of repeats) in the input stream.
+
+    After reading some `input_value` for the first time the streak detector FSM will go to '{input_value}1' state;
+    If the read `input_value` repeats, then the detector goes to '{input_value}2', '{input_value}3' and so on,
+    outputting values according to `below_streak_output_template`;
+    When it reaches '{input_value}{n_streak}' its output value switches to `streak_output_template`.
+    After that, the detector will stay in the '{input_value}{n_streak + 1}' state,
+    outputting values according to `above_streak_output_template`.
+
+    Example:
+        streak_detector(['S', 'L'], n_streak=3, streak_output_template='Error! Too many {input_value} lollipops!')
+        # will create the following MooreFSM:
+        MooreFSM(
+            alphabet=['S', 'L'],
+            states=['Q0', 'S1', 'S2', 'S3', 'S4', 'L1', 'L2', 'L3', 'L4'],
+            initial_state='Q0',
+            transition_mapping={
+                'Q0': {'S': 'S1', 'L': 'L1'},
+                'S1': {'S': 'S2', 'L': 'L1'}, 'S2': {'S': 'S3', 'L': 'L1'},
+                'S3': {'S': 'S4', 'L': 'L1'}, 'S4': {'S': 'S4', 'L': 'L1'},
+                'L1': {'S': 'S1', 'L': 'L2'}, 'L2': {'S': 'S1', 'L': 'L3'},
+                'L3': {'S': 'S1', 'L': 'L4'}, 'L4': {'S': 'S1', 'L': 'L4'}
+            },
+            outputs={'S3': 'Error! Too many S lollipops!', 'L3': 'Error! Too many L lollipops!'}
+        )
+    """
+    if not isinstance(n_streak, int) or n_streak < 1:
+        raise ValueError(f'Expected n_streak to be an integer >= 1, instead got: {n_streak!r}')
+    n_first, n_final = 1, n_streak + 1
+    default_transitions = {input_value: f'{input_value}{n_first}' for input_value in alphabet}
+    transitions = {initial_state: default_transitions.copy()}
+    states = [initial_state]
+    outputs = {}
+    for input_value in alphabet:
+        for i in range(1, n_final + 1):
+            state = f'{input_value}{i}'
+            next_state = f'{input_value}{min(i + 1, n_final)}'  # final state will transition to itself
+            states.append(state)
+            transitions[state] = default_transitions.copy()
+            transitions[state][input_value] = next_state
+            if below_streak_output_template and i < n_streak:
+                outputs[state] = below_streak_output_template.format(input_value=input_value)
+            if streak_output_template and i == n_streak:
+                outputs[state] = streak_output_template.format(input_value=input_value)
+            if above_streak_output_template and i > n_streak:
+                outputs[state] = above_streak_output_template.format(input_value=input_value)
+    res = MooreFSM(
+        alphabet=alphabet, states=states, initial_state=initial_state, transition_mapping=transitions, outputs=outputs,
+    )
+    return res
