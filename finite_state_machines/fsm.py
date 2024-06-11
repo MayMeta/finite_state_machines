@@ -1,6 +1,7 @@
 import json
 from collections.abc import Generator, Iterable, Mapping
 from os import PathLike
+from typing import Literal
 
 from typing_extensions import Self  # replace typing_extensions with typing after upgrading python to 3.11
 
@@ -17,7 +18,7 @@ class BaseFSM:
         states: Iterable[str],
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
-        on_missing_transitions: str = 'raise',
+        on_missing_transitions: Literal['raise', 'go_to_error_state', 'ignore'] = 'raise',
         error_state: str | None = None,
         current_state: str | None = None,
     ):
@@ -194,7 +195,7 @@ class AcceptorFSM(BaseFSM):
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
         accepting_states: Iterable[str],
-        on_missing_transitions: str = 'raise',
+        on_missing_transitions: Literal['raise', 'go_to_error_state', 'ignore'] = 'raise',
         error_state: str | None = None,
         current_state: str | None = None,
     ):
@@ -273,7 +274,7 @@ class MooreFSM(BaseFSM):
         initial_state: str,
         transition_mapping: Mapping[str, Mapping[str, str]],
         outputs: Mapping[str, str],
-        on_missing_transitions: str = 'raise',
+        on_missing_transitions: Literal['raise', 'go_to_error_state', 'ignore'] = 'raise',
         error_state: str | None = None,
         current_state: str | None = None,
     ):
