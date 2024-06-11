@@ -41,3 +41,7 @@ This means that we need some way to store the current state of the system on dis
 to a previously-saved state during system load.
 
 Our toy problem solution should demonstrate this form of persistence.
+
+## Solution
+
+Solution can be found here: [toy_problem.py](toy_problem.py)

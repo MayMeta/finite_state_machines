@@ -7,7 +7,8 @@ This framework provides a pure-Python implementation of
 simple and useful graph-like computational models.
 
 Main code file can be found here: [fsm.py](finite_state_machines/fsm.py)  
-A toy problem definition can be found here: [ToyProblem.md](examples/ToyProblem.md)  
+A toy problem can be found here: [ToyProblem.md](examples/ToyProblem.md)  
+And a solution for it can be found here: [toy_problem.py](examples/toy_problem.py)
 
 ## Setting Up the Development Environment
 
