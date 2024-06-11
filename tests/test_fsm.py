@@ -82,6 +82,38 @@ class TestFSM(unittest.TestCase):
         with self.assertRaises(ValueError):
             FSM(alphabet='S', states='QQQQ', initial_state='Q', transition_mapping={'Q': {'S': 'S1'}}, outputs={})
 
+    def test_on_missing_transitions_go_to_error_state(self):
+        small_fsm = FSM(
+            alphabet='A',
+            states=['Q0', 'Q1'],
+            initial_state='Q0',
+            transition_mapping={'Q0': {'A': 'Q1'}},
+            outputs={},
+            on_missing_transitions='go_to_error_state',
+        )
+        self.assertEqual(small_fsm.states, ['Q0', 'Q1', 'ERR'])
+        self.assertEqual(small_fsm.transition_mapping, {'Q0': {'A': 'Q1'}, 'Q1': {'A': 'ERR'}, 'ERR': {'A': 'ERR'}})
+        small_fsm.transition('A')
+        self.assertEqual(small_fsm.current_state, 'Q1')
+        small_fsm.transition('A')
+        self.assertEqual(small_fsm.current_state, 'ERR')
+        small_fsm.transition('A')
+        self.assertEqual(small_fsm.current_state, 'ERR')
+
+    def test_on_missing_transitions_ignore(self):
+        small_fsm = FSM(
+            alphabet='A',
+            states=['Q0', 'Q1'],
+            initial_state='Q0',
+            transition_mapping={'Q0': {'A': 'Q1'}},
+            outputs={},
+            on_missing_transitions='ignore',
+        )
+        small_fsm.transition('A')
+        self.assertEqual(small_fsm.current_state, 'Q1')
+        with self.assertRaises(ValueError):
+            small_fsm.transition('A')
+
     def test_copy(self):
         self.fsm.transition('S')
         self.assertEqual(self.fsm.current_state, 'S1')
